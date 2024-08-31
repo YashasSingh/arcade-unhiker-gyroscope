@@ -13,11 +13,13 @@ audio = Audio()
 reset_button = Button(270, 200, "Reset Center", width=150, height=40)
 threshold_slider = Slider(20, 200, width=200, height=30, min_value=0.05, max_value=0.5, value=0.1)
 
-# Variables for calibration and smooth animation
+# Variables for calibration, animation, and logging
 calibration_x = 0
 calibration_y = 0
 current_x = 160
 current_y = 120
+tilt_history = []  # Store tilt angles for graph
+max_history = 50  # Limit the number of points in the graph
 
 # Function to calculate the tilt angle
 def calculate_tilt_angle(x, y):
@@ -51,6 +53,11 @@ def get_lean_direction(threshold):
     if abs(angle) > 15:
         audio.play_tone(1000, 200)  # 1kHz tone for 200ms
     
+    # Add tilt angle to history
+    tilt_history.append(angle)
+    if len(tilt_history) > max_history:
+        tilt_history.pop(0)
+    
     # Clear the screen and display the direction, angle, and feedback
     gui.clear()
     
@@ -82,6 +89,29 @@ def animate_arrow(target_x, target_y):
     # Draw arrow at the current position
     gui.line(160, 120, current_x, current_y, color=(255, 255, 255), size=5)
 
+# Function to plot tilt history as a graph
+def plot_tilt_history():
+    graph_x = 20
+    graph_y = 280
+    graph_width = 240
+    graph_height = 80
+    gui.text(graph_x, graph_y - 20, "Tilt History", color=(255, 255, 255), size=20)
+    
+    if len(tilt_history) > 1:
+        # Normalize the tilt history to fit in the graph area
+        min_angle = min(tilt_history)
+        max_angle = max(tilt_history)
+        angle_range = max_angle - min_angle if max_angle != min_angle else 1
+        
+        # Plot the points
+        prev_x, prev_y = None, None
+        for i in range(len(tilt_history)):
+            normalized_y = graph_y + graph_height - int((tilt_history[i] - min_angle) / angle_range * graph_height)
+            x = graph_x + int(i * (graph_width / max_history))
+            if prev_x is not None:
+                gui.line(prev_x, prev_y, x, normalized_y, color=(0, 255, 255), size=2)
+            prev_x, prev_y = x, normalized_y
+
 # Main loop
 while True:
     # Check for reset calibration
@@ -100,6 +130,9 @@ while True:
     
     # Animate the arrow smoothly towards the target position
     animate_arrow(160 + int(target_x * 100), 120 - int(target_y * 100))
+    
+    # Plot the tilt history as a simple graph
+    plot_tilt_history()
     
     print(f"Direction: {direction}, Tilt Angle: {angle:.2f}°, Threshold: {threshold:.2f}")
     time.sleep(0.1)
