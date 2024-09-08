@@ -1,5 +1,7 @@
 
 # Unihiker Tilt Monitoring System
+![image](https://github.com/user-attachments/assets/5e1f4e08-af0d-4336-8bcb-79079c779242)
+
 
 This project is a tilt monitoring system for the Unihiker device, utilizing its built-in MPU6050 gyroscope and accelerometer. The system determines which direction the device is leaning relative to a target center and provides visual, audio, and logged feedback. The project leverages the `pinpong` and `unihiker` libraries to interact with the hardware components.
 
